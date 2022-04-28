@@ -37,36 +37,15 @@ class _P2LMh8NsUTkpWAH3 extends Endpoint {
                 });
         }
 
-        if (_.isArray(transactionIdList)) {
-            async.eachSeries(transactionIdList, (transaction, callback) => {
-                wallet.resetTransactionValidationByTransactionId(transaction)
-                      .then(() => callback())
-                      .catch((e) => callback(true, e));
-            }, (error, exception) => {
-                if (error) {
-                    res.send({
-                        api_status : 'fail',
-                        api_message: `unexpected generic api error: (${exception})`
-                    });
-                }
-                else {
-                    res.send({
-                        api_status: 'success'
-                    });
-                }
-            });
-
-        }
-        else {
-            wallet.resetTransactionValidationByTransactionId(transactionIdList)
-                  .then(() => res.send({
-                      api_status: 'success'
-                  }))
-                  .catch(e => res.send({
-                      api_status : 'fail',
-                      api_message: `unexpected generic api error: (${e})`
-                  }));
-        }
+        let transactionIdSet = new Set(transactionIdList);
+        wallet.resetTransactionValidationByTransactionId(transactionIdSet)
+              .then(() => res.send({
+                  api_status: 'success'
+              }))
+              .catch(e => res.send({
+                  api_status : 'fail',
+                  api_message: `unexpected generic api error: (${e})`
+              }));
     }
 }
 
