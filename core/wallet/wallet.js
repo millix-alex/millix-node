@@ -702,19 +702,10 @@ class Wallet {
                 walletTransactionConsensus.removeFromRejectedTransactions(transaction);
                 walletTransactionConsensus.removeFromRetryTransactions(transaction);
                 transactionRepository.resetTransaction(transaction)
-                                     .then(() => {
-                                         console.log('[api]', 'resetTransaction success', transaction, shardId)
-                                         callback()
-                                     })
-                                     .catch(() => {
-                                         console.log('[api]', 'resetTransaction error', transaction, shardId)
-                                         callback()
-                                     });
+                                     .then(() => callback())
+                                     .catch(() => callback());
             }, () => {
-                console.log('[api]', 'resetValidation', transactionSet)
-
                 this.resetValidation(transactionSet, shardId).then(() => {
-
                     resolve(transactionSet);
                 });
             });
