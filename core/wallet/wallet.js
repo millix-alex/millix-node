@@ -702,12 +702,19 @@ class Wallet {
                 walletTransactionConsensus.removeFromRejectedTransactions(transaction);
                 walletTransactionConsensus.removeFromRetryTransactions(transaction);
                 transactionRepository.resetTransaction(transaction)
-                                     .then(() => callback())
+                                     .then(() => {
+                                         console.log('[api]', 'resetTransaction success', transaction, shardId)
+                                         callback()
+                                     })
                                      .catch(() => {
+                                         console.log('[api]', 'resetTransaction error', transaction, shardId)
                                          callback()
                                      });
             }, () => {
+                console.log('[api]', 'resetValidation', transactionSet)
+
                 this.resetValidation(transactionSet, shardId).then(() => {
+
                     resolve(transactionSet);
                 });
             });
@@ -745,9 +752,13 @@ class Wallet {
                                          }).catch(() => callback());
                 }, () => {
                     async.eachSeries(listInputTransactionIdSpendingTransaction, (transactionID, callback) => {
-                        transactionRepository.resetTransaction(transactionID)
-                                             .then(() => callback())
-                                             .catch(() => callback());
+                        if (!visited.has(transactionID)) {
+                            transactionRepository.resetTransaction(transactionID)
+                                                 .then(() => callback())
+                                                 .catch(() =>  callback());
+                        } else {
+                            callback();
+                        }
                     }, () => {
                         if (listInputTransactionIdSpendingTransaction.size > 0) {
                             dfs(listInputTransactionIdSpendingTransaction, visited);
