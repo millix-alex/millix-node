@@ -1,5 +1,7 @@
 import database from '../../database/database';
 import Endpoint from '../endpoint';
+import config from '../../core/config/config';
+import _ from 'lodash';
 
 
 /**
@@ -26,7 +28,14 @@ class _CZOTAF5LfusB1Ht5 extends Endpoint {
             type  : req.query.p0,
             status: req.query.p1
         }, orderBy, limit)
-                               .then(configurations => res.send(configurations))
+                               .then(configurations => res.send(configurations.concat(_.map(config, function(element, key) {
+                                   return {
+                                       config_name: key,
+                                       value: element,
+                                       status: 1,
+                                       type: 'string'
+                                   };
+                               }))))
                                .catch(e => res.send({
                                    api_status : 'fail',
                                    api_message: `unexpected generic api error: (${e})`

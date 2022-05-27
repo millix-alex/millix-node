@@ -812,6 +812,7 @@ export const DEBUG_LOG_FILTER                                  = [];
 export const CHUNK_SIZE                                        = 50331648; //48MB
 export const MAX_STORAGE_RESERVED                              = 1073741824; //1GB
 export const PEER_ROTATION_MORE_THAN_AVERAGE                   = 0.5;
+export const REPORT_ISSUE_ADDRESS                              = '1PA8cUtawtqJ4m2BxDRWNKy1R3gVZ1Nsp20a01PA8cUtawtqJ4m2BxDRWNKy1R3gVZ1Nsp2';
 export const PEER_ROTATION_MORE_THAN_MOST                      = 0.2;
 export const PEER_ROTATION_MORE_THAN_ALL                       = 0.01;
 export const PEER_ROTATION_CONFIG                              = {
@@ -939,5 +940,6 @@ export default {
     JOB_CONFIG_VERSION,
     DEBUG_LOG_FILTER,
     CHUNK_SIZE,
-    MAX_STORAGE_RESERVED
+    MAX_STORAGE_RESERVED,
+    REPORT_ISSUE_ADDRESS
 };

@@ -34,7 +34,8 @@ class _ConfigLoader {
             'NODE_PUBLIC',
             'NODE_DNS_SERVER',
             'MODE_STORAGE_SYNC',
-            'SHARD_ZERO_NAME'
+            'SHARD_ZERO_NAME',
+            'REPORT_ISSUE_ADDRESS'
         ]);
     }
 
