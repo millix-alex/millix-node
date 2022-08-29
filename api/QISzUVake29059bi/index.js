@@ -21,8 +21,14 @@ class _QISzUVake29059bi extends Endpoint {
      * @returns {*}
      */
     handler(app, req, res) {
-        wallet.resetTransactionValidationRejected();
-        res.send({success: true});
+        wallet.resetTransactionValidationRejected()
+              .then(() => res.send({
+                  api_status: 'success'
+              }))
+              .catch(e => res.send({
+                  api_status : 'fail',
+                  api_message: `unexpected generic api error: (${e})`
+              }));
     }
 }
 

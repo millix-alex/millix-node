@@ -694,37 +694,39 @@ class Wallet {
         return walletTransactionConsensus;
     }
 
-    resetTransactionValidationByTransactionId(transactionID) {
+    resetTransactionValidationByTransactionId(transactionList) {
         return database.applyShards(shardID => {
-            const transactionRepository = database.getRepository('transaction', shardID);
-            return transactionRepository.getTransactionObject(transactionID)
-                                        .then((transaction) => {
-                                            if (transaction) { // transaction data not found
-                                                return transactionRepository.resetTransaction(transactionID)
-                                                                            .then(() => {
-                                                                                return this.resetValidation(new Set([transaction.transaction_id]), shardID);
-                                                                            });
-                                            }
-                                        });
+            return this.resetTransactionValidation(new Set(transactionList), shardID);
         });
+    }
+
+    resetTransactionValidation(transactionSet, shardId) {
+        return new Promise(resolve => {
+            const transactionRepository = database.getRepository('transaction', shardId);
+            async.eachSeries(transactionSet, (transaction, callback) => {
+                walletTransactionConsensus.removeFromRejectedTransactions(transaction);
+                walletTransactionConsensus.removeFromRetryTransactions(transaction);
+                transactionRepository.resetTransaction(transaction)
+                                     .then(() => callback())
+                                     .catch(() => callback());
+            }, () => {
+                this.resetValidation(transactionSet, shardId).then(() => {
+                    resolve(transactionSet);
+                });
+            });
+        });
+
     }
 
     resetTransactionValidationRejected() {
         walletTransactionConsensus.resetTransactionValidationRejected();
-        database.applyShards(shardID => {
+        return database.applyShards(shardID => {
             const transactionRepository = database.getRepository('transaction', shardID);
             return transactionRepository.listWalletTransactionOutputNotSpent(this.defaultKeyIdentifier)
-                                        .then(transactions => new Promise(resolve => {
-                                            async.eachSeries(transactions, (transaction, callback) => {
-                                                walletTransactionConsensus.removeFromRejectedTransactions(transaction.transaction_id);
-                                                walletTransactionConsensus.removeFromRetryTransactions(transaction.transaction_id);
-                                                transactionRepository.resetTransaction(transaction.transaction_id)
-                                                                     .then(() => callback())
-                                                                     .catch(() => callback());
-                                            }, () => resolve(new Set(_.map(transactions, t => t.transaction_id))));
-                                        }))
-                                        .then(rootTransactions => this.resetValidation(rootTransactions, shardID));
-        }).then(_ => _);
+                                        .then(transactions => {
+                                            return this.resetTransactionValidation(new Set(_.map(transactions, t => t.transaction_id)), shardID)
+                                        });
+        });
     }
 
     resetValidation(rootTransactions, shardID) {
@@ -746,9 +748,13 @@ class Wallet {
                                          }).catch(() => callback());
                 }, () => {
                     async.eachSeries(listInputTransactionIdSpendingTransaction, (transactionID, callback) => {
-                        transactionRepository.resetTransaction(transactionID)
-                                             .then(() => callback())
-                                             .catch(() => callback());
+                        if (!visited.has(transactionID)) {
+                            transactionRepository.resetTransaction(transactionID)
+                                                 .then(() => callback())
+                                                 .catch(() =>  callback());
+                        } else {
+                            callback();
+                        }
                     }, () => {
                         if (listInputTransactionIdSpendingTransaction.size > 0) {
                             dfs(listInputTransactionIdSpendingTransaction, visited);
